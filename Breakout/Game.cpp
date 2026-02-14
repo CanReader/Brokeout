@@ -3,7 +3,6 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include <Windows.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -68,8 +67,8 @@ Game::Game() : camera(std::make_unique<Camera>(glm::vec3(0.0f, 0.0f, 10.0f)))
 void Game::Run()
 {
 	if (!std::filesystem::exists("res")) {
-		MessageBox(NULL,"The resource folder does not exists in app folder!","ERROR",MB_OK);
-		throw new std::runtime_error("The resource folder does not exists in app folder! Please move it from project folder..");
+		std::cerr << "ERROR: The resource folder does not exist in app folder!" << std::endl;
+		throw std::runtime_error("The resource folder does not exist in app folder! Please move it from project folder..");
 	}
 
 	if (!glfwInit())
@@ -134,15 +133,15 @@ void Game::Init()
 
 	score = 0;
 
-	shader = std::make_unique<Shader>("res\\projection.vert.glsl", "res\\projection.frag.glsl");
-	spriteShader = std::make_unique<Shader>("res\\spriteProjection.vert.glsl", "res\\spriteProjection.frag.glsl");
+	shader = std::make_unique<Shader>("res/projection.vert.glsl", "res/projection.frag.glsl");
+	spriteShader = std::make_unique<Shader>("res/spriteProjection.vert.glsl", "res/spriteProjection.frag.glsl");
 	
 	{
 		background = std::make_unique<GameObject>();
-		background->loadASSIMP("res\\mesh\\backg.obj");
+		background->loadASSIMP("res/mesh/backg.obj");
 		background->setBuffers();
 
-		background->texture.Load("res\\content\\skymap.png");
+		background->texture.Load("res/content/skymap.png");
 		
 		background->position = glm::vec3(0.0f);
 		background->scale = glm::vec3(100.0f);
@@ -150,7 +149,7 @@ void Game::Init()
 
 	{
 		player = std::make_unique<Player>();
-		player->loadASSIMP("res\\mesh\\player.obj");
+		player->loadASSIMP("res/mesh/player.obj");
 		player->setBuffers();
 
 		player->position = glm::vec3(0.0f, -9.5f, 0.0f);
@@ -158,12 +157,12 @@ void Game::Init()
 		
 		offset = player->scale.x;
 
-		player->texture.Load("res\\content\\player.png");
+		player->texture.Load("res/content/player.png");
 	}
 
 	{
 		ball = std::make_unique<Ball>();
-		ball->loadASSIMP("res\\mesh\\sphere.obj");
+		ball->loadASSIMP("res/mesh/sphere.obj");
 		ball->setBuffers();
 
 		ball->position = glm::vec3
@@ -175,7 +174,7 @@ void Game::Init()
 		
 		ball->scale = glm::vec3(0.1f, 0.1f, 0.1f);
 
-		ball->texture.Load("res\\content\\ball.png");
+		ball->texture.Load("res/content/ball.png");
 	}
 
 	{
@@ -194,7 +193,7 @@ void Game::Init()
 			0.0f
 		);
 
-		lives->texture.Load("res\\content\\heart.png");
+		lives->texture.Load("res/content/heart.png");
 	}
 
 	{
@@ -209,7 +208,7 @@ void Game::Init()
 			0.0f
 		);
 		
-		win->texture.Load("res\\content\\reward.png");
+		win->texture.Load("res/content/reward.png");
 		win->active = false;
 	}
 	
@@ -225,7 +224,7 @@ void Game::Init()
 			0.0f
 		);
 		
-		gameover->texture.Load("res\\content\\punish.png");
+		gameover->texture.Load("res/content/punish.png");
 		gameover->active = false;
 	}
 
@@ -414,35 +413,35 @@ void Game::Render()
 void Game::BuildLevel()
 {
 	auto brickTexture = std::make_unique<Texture>();
-	brickTexture->Load("res\\content\\blocks\\brick_block.png");
+	brickTexture->Load("res/content/blocks\\brick_block.png");
 
 	auto grassTexture = std::make_unique<Texture>();
-	grassTexture->Load("res\\content\\blocks\\grass_block.png");
+	grassTexture->Load("res/content/blocks\\grass_block.png");
 
 	auto cobbleTexture = std::make_unique<Texture>();
-	cobbleTexture->Load("res\\content\\blocks\\cobble_block.png");
+	cobbleTexture->Load("res/content/blocks\\cobble_block.png");
 
 	auto ironTexture = std::make_unique<Texture>();
-	ironTexture->Load("res\\content\\blocks\\iron_block.png");
+	ironTexture->Load("res/content/blocks\\iron_block.png");
 
 	auto goldTexture = std::make_unique<Texture>();
-	goldTexture->Load("res\\content\\blocks\\gold_block.png");
+	goldTexture->Load("res/content/blocks\\gold_block.png");
 
 	auto emeraldTexture = std::make_unique<Texture>();
-	emeraldTexture->Load("res\\content\\blocks\\emerald_block.png");
+	emeraldTexture->Load("res/content/blocks\\emerald_block.png");
 
 	auto diamondTexture = std::make_unique<Texture>();
-	diamondTexture->Load("res\\content\\blocks\\diamond_block.png");
+	diamondTexture->Load("res/content/blocks\\diamond_block.png");
 
 	auto crackedTexture = std::make_unique<Texture>();
-	crackedTexture->Load("res\\content\\crack.png");
+	crackedTexture->Load("res/content/crack.png");
 	
 	for (int y = 0; y < numbBricksHigh; y++)
 	{
 		for (int x = 0; x < numbBricksWide; x++)
 		{
 			_brick = std::make_unique<Brick>();
-			_brick->loadASSIMP("res\\mesh\\cube.obj");
+			_brick->loadASSIMP("res/mesh/cube.obj");
 			_brick->setBuffers();
 
 			_brick->scale = glm::vec3(0.5f, 0.5f, 0.5f);
@@ -467,7 +466,7 @@ void Game::BuildLevel()
 	for (int i = 0; i < boundBlocks; i++)
 	{
 		_brickLeft = std::make_unique<Brick>();
-		_brickLeft->loadASSIMP("res\\mesh\\cube.obj");
+		_brickLeft->loadASSIMP("res/mesh/cube.obj");
 		_brickLeft->setBuffers();
 
 		_brickLeft->scale = glm::vec3(0.5f, 0.5f, 0.5f);
@@ -481,7 +480,7 @@ void Game::BuildLevel()
 	for (int i = 0; i < topBlocks; i++)
 	{
 		_brickTop = std::make_unique<Brick>();
-		_brickTop->loadASSIMP("res\\mesh\\cube.obj");
+		_brickTop->loadASSIMP("res/mesh/cube.obj");
 		_brickTop->setBuffers();
 
 		_brickTop->scale = glm::vec3(0.5f, 0.5f, 0.5f);
@@ -495,7 +494,7 @@ void Game::BuildLevel()
 	for (int i = 0; i < boundBlocks; i++)
 	{
 		_brickRight = std::make_unique<Brick>();
-		_brickRight->loadASSIMP("res\\mesh\\cube.obj");
+		_brickRight->loadASSIMP("res/mesh/cube.obj");
 		_brickRight->setBuffers();
 
 		_brickRight->scale = glm::vec3(0.5f, 0.5f, 0.5f);
@@ -799,7 +798,7 @@ void Game::LoadScore()
 				0.0f
 			);
 			
-			sprite->texture.Load("res\\content\\score_text.png");
+			sprite->texture.Load("res/content/score_text.png");
 		}
 		else
 		{
@@ -811,7 +810,7 @@ void Game::LoadScore()
 				0.0f
 			);
 			
-			sprite->texture.Load("res\\content\\0.png");
+			sprite->texture.Load("res/content/0.png");
 		}
 		
 		scoreObject.push_back(std::move(sprite));
@@ -820,7 +819,7 @@ void Game::LoadScore()
 	for (int i = 0; i < 10; i++)
 	{
 		auto texture = std::make_unique<Texture>();
-		auto file = "res\\content\\" + std::to_string(i) + ".png";
+		auto file = "res/content/" + std::to_string(i) + ".png";
 		
 		texture->Load(file);
 		
