@@ -2,16 +2,25 @@
 A 3D breakout game made with OpenGL and GLFW. This project is initialized for learning the path of OpenGL.
 
 ## Functionalities
-- 1 level available currently and will be added more..
+- 3 levels with increasing difficulty and unique brick layouts
 - There are 3 hearts which represented as 3 re-try (and can be increased)
-- Score variable is used for measure player's success and motivation
+- Combo scoring system - hit bricks in quick succession for up to 5x score multiplier
+- Angle-based ball bouncing - ball direction depends on where it hits the paddle
+- Pause/resume with P key
 - When ball hits to a block, firstly it is get cracked, if it hits again then break animation applied
 - Block textures are designed as Minecraft blocks
+- Cross-platform compatible (Linux, macOS, Windows)
 
-  
+## Controls
+| Key | Action |
+|-----|--------|
+| LEFT / RIGHT | Move paddle |
+| SPACE | Launch ball |
+| P | Pause / Resume |
+| ESC | Exit game |
+
 ## Used technologies
-- Visual Studio 2022
-- CMake 3.28.0-rc1
+- Visual Studio 2022 / CMake 3.28.0-rc1
 - Assimp
 - Glad
 - Glfw/Glm
@@ -28,10 +37,14 @@ A 3D breakout game made with OpenGL and GLFW. This project is initialized for le
 - ✅ Add more smooth ball bouncing effect
 - ✅ Make blocks able to rotate
 - ✅ Add animation after break
+- ✅ Add multiple levels
+- ✅ Add pause functionality
+- ✅ Improve ball physics
+- ✅ Cross-platform support
 - ⬜ Apply multithreading rendering
 - ⬜ Add menu
 - ⬜ Fix texture blending on crack
-- ⬜ Add more levels (minimum 5 levels)
+- ⬜ Add more levels (expand to 5+)
 - ⬜ Fix skybox bug
 
 
