@@ -29,9 +29,10 @@ private:
 	void Update(float dt);
 	void Render();
 
-	void BuildLevel();
+	void BuildLevel(int level);
 	void UpdateCameraView();
 	bool IsGameFinished();
+	void NextLevel();
 	
 	void UpdatePlayerPosition();
 	void UpdateBallPosition();
@@ -76,6 +77,9 @@ private:
 	GLFWwindow* window;
 
 	bool pauseKeyPressed = false;
+
+	int currentLevel = 1;
+	static constexpr int MAX_LEVELS = 3;
 
 	int comboCount = 0;
 	float comboTimer = 0.0f;

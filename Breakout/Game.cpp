@@ -178,7 +178,8 @@ void Game::Init()
 	}
 
 	{
-		BuildLevel();
+		currentLevel = 1;
+		BuildLevel(currentLevel);
 	}
 
 	{
@@ -292,7 +293,14 @@ void Game::Update(float dt)
 
 		if (finishGame)
 		{
-			state = GameState::Win;
+			if (currentLevel < MAX_LEVELS)
+			{
+				NextLevel();
+			}
+			else
+			{
+				state = GameState::Win;
+			}
 		}
 
 		// Decay combo timer
@@ -483,35 +491,86 @@ void Game::Render()
 	spriteShader->unuse();
 }
 
-void Game::BuildLevel()
+void Game::BuildLevel(int level)
 {
 	auto brickTexture = std::make_unique<Texture>();
-	brickTexture->Load("res/content/blocks\\brick_block.png");
+	brickTexture->Load("res/content/blocks/brick_block.png");
 
 	auto grassTexture = std::make_unique<Texture>();
-	grassTexture->Load("res/content/blocks\\grass_block.png");
+	grassTexture->Load("res/content/blocks/grass_block.png");
 
 	auto cobbleTexture = std::make_unique<Texture>();
-	cobbleTexture->Load("res/content/blocks\\cobble_block.png");
+	cobbleTexture->Load("res/content/blocks/cobble_block.png");
 
 	auto ironTexture = std::make_unique<Texture>();
-	ironTexture->Load("res/content/blocks\\iron_block.png");
+	ironTexture->Load("res/content/blocks/iron_block.png");
 
 	auto goldTexture = std::make_unique<Texture>();
-	goldTexture->Load("res/content/blocks\\gold_block.png");
+	goldTexture->Load("res/content/blocks/gold_block.png");
 
 	auto emeraldTexture = std::make_unique<Texture>();
-	emeraldTexture->Load("res/content/blocks\\emerald_block.png");
+	emeraldTexture->Load("res/content/blocks/emerald_block.png");
 
 	auto diamondTexture = std::make_unique<Texture>();
-	diamondTexture->Load("res/content/blocks\\diamond_block.png");
+	diamondTexture->Load("res/content/blocks/diamond_block.png");
 
 	auto crackedTexture = std::make_unique<Texture>();
 	crackedTexture->Load("res/content/crack.png");
-	
-	for (int y = 0; y < numbBricksHigh; y++)
+
+	// Level layouts: 0 = empty, 1 = grass, 2 = cobble, 3 = iron, 4 = gold, 5 = diamond, 6 = emerald
+	int layout[numbBricksHigh][numbBricksWide];
+
+	if (level == 1)
 	{
-		for (int x = 0; x < numbBricksWide; x++)
+		// Level 1: Simple rows (original layout)
+		for (int y = 0; y < (int)numbBricksHigh; y++)
+			for (int x = 0; x < (int)numbBricksWide; x++)
+				layout[y][x] = y + 1;
+	}
+	else if (level == 2)
+	{
+		// Level 2: Checkerboard pattern with gaps
+		for (int y = 0; y < (int)numbBricksHigh; y++)
+		{
+			for (int x = 0; x < (int)numbBricksWide; x++)
+			{
+				if ((x + y) % 2 == 0)
+					layout[y][x] = (y < 2) ? 3 : (y < 4) ? 4 : 5;
+				else
+					layout[y][x] = 0;
+			}
+		}
+	}
+	else
+	{
+		// Level 3: Diamond/pyramid pattern with tough blocks
+		for (int y = 0; y < (int)numbBricksHigh; y++)
+		{
+			for (int x = 0; x < (int)numbBricksWide; x++)
+			{
+				int cx = numbBricksWide / 2;
+				int dist = abs(x - cx);
+				if (dist <= y + 1)
+					layout[y][x] = (y < 2) ? 5 : (y < 4) ? 6 : 4;
+				else
+					layout[y][x] = 0;
+			}
+		}
+	}
+
+	Texture* textureMap[] = {
+		nullptr,
+		grassTexture.get(),
+		cobbleTexture.get(),
+		ironTexture.get(),
+		goldTexture.get(),
+		diamondTexture.get(),
+		emeraldTexture.get()
+	};
+
+	for (int y = 0; y < (int)numbBricksHigh; y++)
+	{
+		for (int x = 0; x < (int)numbBricksWide; x++)
 		{
 			_brick = std::make_unique<Brick>();
 			_brick->loadASSIMP("res/mesh/cube.obj");
@@ -520,23 +579,24 @@ void Game::BuildLevel()
 			_brick->scale = glm::vec3(0.5f, 0.5f, 0.5f);
 			_brick->position = (glm::vec3(-9.0f + (2.0f * x), (2.0f * y), 0.0f));
 
+			if (layout[y][x] == 0)
+			{
+				_brick->brickAlive = false;
+				_brick->brickDying = false;
+				_brick->scale = glm::vec3(0.0f);
+				_brick->texture = *grassTexture;
+			}
+			else
+			{
+				_brick->texture = *textureMap[layout[y][x]];
+			}
 
-			_brick->texture = 
-				y == 0 ? *std::move(grassTexture) :
-				y == 1 ? *std::move(cobbleTexture) :
-				y == 2 ? *std::move(ironTexture) :
-				y == 3 ? *std::move(goldTexture) :
-				y == 4 ? *std::move(diamondTexture) :
-				*std::move(emeraldTexture);
-
-			_brick->cracked = *std::move(crackedTexture);
-
+			_brick->cracked = *crackedTexture;
 			bricks[y][x] = std::move(_brick);
-
 		}
 	}
 
-	for (int i = 0; i < boundBlocks; i++)
+	for (int i = 0; i < (int)boundBlocks; i++)
 	{
 		_brickLeft = std::make_unique<Brick>();
 		_brickLeft->loadASSIMP("res/mesh/cube.obj");
@@ -545,12 +605,12 @@ void Game::BuildLevel()
 		_brickLeft->scale = glm::vec3(0.5f, 0.5f, 0.5f);
 		_brickLeft->position = (glm::vec3(-12.0f, -10.0f + i, 0.0f));
 
-		_brickLeft->texture = *std::move(brickTexture);
+		_brickLeft->texture = *brickTexture;
 
 		boundLeft[i] = std::move(_brickLeft);
 	}
 
-	for (int i = 0; i < topBlocks; i++)
+	for (int i = 0; i < (int)topBlocks; i++)
 	{
 		_brickTop = std::make_unique<Brick>();
 		_brickTop->loadASSIMP("res/mesh/cube.obj");
@@ -559,12 +619,12 @@ void Game::BuildLevel()
 		_brickTop->scale = glm::vec3(0.5f, 0.5f, 0.5f);
 		_brickTop->position = (glm::vec3(-12.0f + i, 10.0f, 0.0f));
 
-		_brickTop->texture = *std::move(brickTexture);
+		_brickTop->texture = *brickTexture;
 
 		boundTop[i] = std::move(_brickTop);
 	}
-	
-	for (int i = 0; i < boundBlocks; i++)
+
+	for (int i = 0; i < (int)boundBlocks; i++)
 	{
 		_brickRight = std::make_unique<Brick>();
 		_brickRight->loadASSIMP("res/mesh/cube.obj");
@@ -573,10 +633,34 @@ void Game::BuildLevel()
 		_brickRight->scale = glm::vec3(0.5f, 0.5f, 0.5f);
 		_brickRight->position = (glm::vec3(12.0f, -10.0f + i, 0.0f));
 
-		_brickRight->texture = *std::move(brickTexture);
+		_brickRight->texture = *brickTexture;
 
 		boundRight[i] = std::move(_brickRight);
 	}
+}
+
+void Game::NextLevel()
+{
+	currentLevel++;
+
+	// Increase ball speed by 15% per level
+	float speedMultiplier = 1.0f + (currentLevel - 1) * 0.15f;
+	ball->velocity = glm::vec2(5.5f * speedMultiplier, 10.0f * speedMultiplier);
+
+	// Reset ball to paddle
+	stuckToPaddle = true;
+	ball->position = glm::vec3(
+		player->position.x,
+		player->position.y + player->scale.y + (ball->scale.y * 2),
+		player->position.z
+	);
+
+	// Reset combo
+	comboCount = 0;
+	comboTimer = 0.0f;
+
+	// Build new level layout
+	BuildLevel(currentLevel);
 }
 
 void Game::UpdateCameraView()
