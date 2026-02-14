@@ -702,7 +702,20 @@ void Game::UpdateBallPosition()
 		}
 		else if (CollisionDetection(ball, player))
 		{
-			ball->velocity.y = abs(ball->velocity.y);
+			// Calculate where the ball hit the paddle (-1.0 = left edge, +1.0 = right edge)
+			float hitPosition = (ball->position.x - player->position.x) / player->scale.x;
+			hitPosition = glm::clamp(hitPosition, -1.0f, 1.0f);
+
+			// Determine ball speed (preserve magnitude)
+			float speed = glm::length(ball->velocity);
+
+			// Map hit position to angle: center = straight up, edges = angled
+			// Range: -60 to +60 degrees from vertical
+			float maxAngle = glm::radians(60.0f);
+			float angle = hitPosition * maxAngle;
+
+			ball->velocity.x = speed * sin(angle);
+			ball->velocity.y = speed * cos(angle);
 		}
 
 		for (int y = 0; y < numbBricksHigh; y++)
