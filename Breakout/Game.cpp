@@ -228,6 +228,22 @@ void Game::Init()
 		gameover->active = false;
 	}
 
+	{
+		pauseOverlay = std::make_unique<Sprite>();
+		pauseOverlay->SetBuffers();
+
+		pauseOverlay->scale = glm::vec3(screenWidth / 2, screenHeight / 2, 1.0f);
+		pauseOverlay->position = glm::vec3
+		(
+			screenWidth / 4,
+			screenHeight / 4,
+			0.0f
+		);
+
+		pauseOverlay->texture.Load("res/content/pause.png");
+		pauseOverlay->active = false;
+	}
+
 	LoadScore();
 
 	glEnable(GL_DEPTH_TEST);
@@ -244,10 +260,36 @@ void Game::Update(float dt)
 	spriteShader->setFloatMat4("uProjection", orthoProgMatrix);
 	spriteShader->unuse();
 	
+	// Handle pause toggle (works in Play and Paused states)
+	if (state == GameState::Play || state == GameState::Paused)
+	{
+		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+		{
+			if (!pauseKeyPressed)
+			{
+				pauseKeyPressed = true;
+				if (state == GameState::Play)
+				{
+					state = GameState::Paused;
+					pauseOverlay->active = true;
+				}
+				else
+				{
+					state = GameState::Play;
+					pauseOverlay->active = false;
+				}
+			}
+		}
+		else
+		{
+			pauseKeyPressed = false;
+		}
+	}
+
 	if (state == GameState::Play)
 	{
 		finishGame = IsGameFinished();
-		
+
 		if (finishGame)
 		{
 			state = GameState::Win;
@@ -256,6 +298,15 @@ void Game::Update(float dt)
 		UpdatePlayerPosition();
 
 		UpdateBallPosition();
+	}
+	else if (state == GameState::Paused)
+	{
+		// Still handle ESC while paused
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		{
+			state = GameState::Exit;
+			glfwSetWindowShouldClose(window, true);
+		}
 	}
 	else if (state == GameState::Win)
 	{
@@ -383,12 +434,23 @@ void Game::Render()
 		if (gameover->active)
 		{
 			ResetMatrices();
-			
+
 			modelTranslate = glm::translate(modelTranslate, gameover->position);
 			modelScale = glm::scale(modelScale, gameover->scale);
-			
+
 			RenderSprite(spriteShader, modelTranslate, modelScale, gameover->colour, gameover->texture);
 			gameover->Render();
+		}
+
+		if (pauseOverlay->active)
+		{
+			ResetMatrices();
+
+			modelTranslate = glm::translate(modelTranslate, pauseOverlay->position);
+			modelScale = glm::scale(modelScale, pauseOverlay->scale);
+
+			RenderSprite(spriteShader, modelTranslate, modelScale, pauseOverlay->colour, pauseOverlay->texture);
+			pauseOverlay->Render();
 		}
 	}
 

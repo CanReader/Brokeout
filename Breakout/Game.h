@@ -14,7 +14,7 @@
 #include "models/Sprite.h"
 #include "models/GameObject.h"
 
-enum class GameState { Play, Win, Lose, Exit };
+enum class GameState { Play, Paused, Win, Lose, Exit };
 
 struct GLFWwindow;
 
@@ -65,6 +65,7 @@ private:
 	std::unique_ptr<Sprite> lives;
 	std::unique_ptr<Sprite> win;
 	std::unique_ptr<Sprite> gameover;
+	std::unique_ptr<Sprite> pauseOverlay;
 	std::unique_ptr<Ball> ball;
 	
 	std::unique_ptr<Brick> _brick;
@@ -73,6 +74,8 @@ private:
 	std::unique_ptr<Brick> _brickTop;
 
 	GLFWwindow* window;
+
+	bool pauseKeyPressed = false;
 
 	glm::vec3 _lightPos = glm::vec3(30.0f, 30.0f, 30.0f);
 	const glm::vec3 _lightColour = glm::vec3(0.8f, 0.9f, 0.8f);
