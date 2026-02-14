@@ -295,6 +295,17 @@ void Game::Update(float dt)
 			state = GameState::Win;
 		}
 
+		// Decay combo timer
+		if (comboTimer > 0.0f)
+		{
+			comboTimer -= dt;
+			if (comboTimer <= 0.0f)
+			{
+				comboCount = 0;
+				comboTimer = 0.0f;
+			}
+		}
+
 		UpdatePlayerPosition();
 
 		UpdateBallPosition();
@@ -699,6 +710,8 @@ void Game::UpdateBallPosition()
 		{
 			player->lives--;
 			stuckToPaddle = true;
+			comboCount = 0;
+			comboTimer = 0.0f;
 		}
 		else if (CollisionDetection(ball, player))
 		{
@@ -797,9 +810,13 @@ bool Game::CollisionDetection(std::unique_ptr<Ball>& ball, std::unique_ptr<Playe
 void Game::SetCrackedBrick(const int x, const int y)
 {
 	bricks[y][x]->hits -= 1;
-	bricks[y][x]->texture =  bricks[y][x]->cracked;
-	
-	score += 1;
+	bricks[y][x]->texture = bricks[y][x]->cracked;
+
+	comboCount++;
+	comboTimer = COMBO_TIMEOUT;
+	int multiplier = std::min(comboCount, 5);
+
+	score += 1 * multiplier;
 	SetScore();
 }
 
@@ -807,8 +824,12 @@ void Game::SetDeadBrick(const int x, const int y)
 {
 	bricks[y][x]->brickDying = true;
 	bricks[y][x]->brickAlive = false;
-	
-	score += 3;
+
+	comboCount++;
+	comboTimer = COMBO_TIMEOUT;
+	int multiplier = std::min(comboCount, 5);
+
+	score += 3 * multiplier;
 	SetScore();
 }
 

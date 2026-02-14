@@ -77,6 +77,10 @@ private:
 
 	bool pauseKeyPressed = false;
 
+	int comboCount = 0;
+	float comboTimer = 0.0f;
+	static constexpr float COMBO_TIMEOUT = 2.0f;
+
 	glm::vec3 _lightPos = glm::vec3(30.0f, 30.0f, 30.0f);
 	const glm::vec3 _lightColour = glm::vec3(0.8f, 0.9f, 0.8f);
 	const GLfloat _lightRotation = -0.001f;
