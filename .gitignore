@@ -1,0 +1,19 @@
+# Build directories
+build/
+Bin/
+CMakeCache.txt
+CMakeFiles/
+
+# IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Compiled objects
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
