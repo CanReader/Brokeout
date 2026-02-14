@@ -2,10 +2,8 @@
 
 int main()
 {
-	Game* app = new Game();
-	app->Run();
-		
-	delete app;
-	
-    return 0;
+	Game app;
+	app.Run();
+
+	return 0;
 }
