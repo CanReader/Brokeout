@@ -6,6 +6,7 @@ A 3D breakout game made with OpenGL and GLFW. This project is initialized for le
 - There are 3 hearts which represented as 3 re-try (and can be increased)
 - Combo scoring system - hit bricks in quick succession for up to 5x score multiplier
 - Angle-based ball bouncing - ball direction depends on where it hits the paddle
+- Power-ups drop from broken bricks (wide paddle, extra life, slow/fast ball)
 - Pause/resume with P key
 - When ball hits to a block, firstly it is get cracked, if it hits again then break animation applied
 - Block textures are designed as Minecraft blocks

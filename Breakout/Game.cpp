@@ -11,14 +11,17 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "camera.h"
+#include "Camera.h"
 #include "Shader.h"
 
 #include "models/Ball.h"
 #include "models/Brick.h"
 #include "models/Player.h"
+#include "models/PowerUp.h"
 #include "models/GameObject.h"
 #include "models/Sprite.h"
+
+#include <cstdlib>
 
 bool updateView;
 
@@ -129,6 +132,11 @@ void Game::Init()
 
 	updateView = false;
 
+	activePowerUps.clear();
+	widePaddleTimer = 0.0f;
+	slowBallTimer = 0.0f;
+	fastBallTimer = 0.0f;
+
 	stuckToPaddle = true;
 
 	score = 0;
@@ -156,6 +164,7 @@ void Game::Init()
 		player->scale = glm::vec3(1.5f, 0.125f, 0.5f);
 		
 		offset = player->scale.x;
+		originalPlayerScale = player->scale;
 
 		player->texture.Load("res/content/player.png");
 	}
@@ -317,6 +326,8 @@ void Game::Update(float dt)
 		UpdatePlayerPosition();
 
 		UpdateBallPosition();
+
+		UpdatePowerUps(dt);
 	}
 	else if (state == GameState::Paused)
 	{
@@ -417,6 +428,20 @@ void Game::Render()
 
 		RenderObject(shader, modelTranslate, modelRotation, modelScale, boundTop[i]->colour, boundTop[i]->texture);
 		boundTop[i]->render();
+	}
+
+	for (auto& powerUp : activePowerUps)
+	{
+		if (powerUp->active)
+		{
+			ResetMatrices();
+			modelTranslate = translate(modelTranslate, powerUp->position);
+			modelScale = scale(modelScale, powerUp->scale);
+			modelRotation = rotate(modelRotation, powerUp->rotation, glm::vec3(0.0f, 1.0f, 0.0f));
+
+			RenderObject(shader, modelTranslate, modelRotation, modelScale, powerUp->colour, powerUp->texture);
+			powerUp->render();
+		}
 	}
 
 	shader->unuse();
@@ -658,6 +683,14 @@ void Game::NextLevel()
 	// Reset combo
 	comboCount = 0;
 	comboTimer = 0.0f;
+
+	// Clear power-ups and reset timed effects
+	activePowerUps.clear();
+	widePaddleTimer = 0.0f;
+	slowBallTimer = 0.0f;
+	fastBallTimer = 0.0f;
+	player->scale = originalPlayerScale;
+	offset = originalPlayerScale.x;
 
 	// Build new level layout
 	BuildLevel(currentLevel);
@@ -909,6 +942,8 @@ void Game::SetDeadBrick(const int x, const int y)
 	bricks[y][x]->brickDying = true;
 	bricks[y][x]->brickAlive = false;
 
+	SpawnPowerUp(bricks[y][x]->position);
+
 	comboCount++;
 	comboTimer = COMBO_TIMEOUT;
 	int multiplier = std::min(comboCount, 5);
@@ -926,6 +961,146 @@ void Game::SetDyingBrick(const int x, const int y)
 	{
 		bricks[y][x]->scale -= 0.75f * deltaTime;
 	}
+}
+
+void Game::SpawnPowerUp(glm::vec3 brickPosition)
+{
+	float roll = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+	if (roll > POWERUP_SPAWN_CHANCE)
+		return;
+
+	int typeRoll = rand() % 4;
+	auto powerUp = std::make_unique<PowerUp>();
+	powerUp->loadASSIMP("res/mesh/cube.obj");
+	powerUp->setBuffers();
+
+	powerUp->position = brickPosition;
+	powerUp->scale = glm::vec3(0.3f, 0.3f, 0.3f);
+	powerUp->texture.Load("res/content/player.png");
+	powerUp->type = static_cast<PowerUpType>(typeRoll);
+
+	switch (powerUp->type)
+	{
+	case PowerUpType::WidePaddle:
+		powerUp->colour = glm::vec3(0.0f, 1.0f, 0.0f);
+		break;
+	case PowerUpType::ExtraLife:
+		powerUp->colour = glm::vec3(1.0f, 0.0f, 0.0f);
+		break;
+	case PowerUpType::SlowBall:
+		powerUp->colour = glm::vec3(0.0f, 0.0f, 1.0f);
+		break;
+	case PowerUpType::FastBall:
+		powerUp->colour = glm::vec3(1.0f, 0.5f, 0.0f);
+		break;
+	}
+
+	activePowerUps.push_back(std::move(powerUp));
+}
+
+void Game::UpdatePowerUps(float dt)
+{
+	for (auto it = activePowerUps.begin(); it != activePowerUps.end();)
+	{
+		auto& powerUp = *it;
+		powerUp->position.y += powerUp->velocity.y * dt;
+		powerUp->rotation += dt * 3.0f;
+
+		if (CollisionDetection(powerUp, player))
+		{
+			ApplyPowerUp(powerUp->type);
+			it = activePowerUps.erase(it);
+			continue;
+		}
+
+		if (powerUp->position.y < -15.0f)
+		{
+			it = activePowerUps.erase(it);
+			continue;
+		}
+
+		++it;
+	}
+
+	// Tick down timed effects
+	if (widePaddleTimer > 0.0f)
+	{
+		widePaddleTimer -= dt;
+		if (widePaddleTimer <= 0.0f)
+		{
+			widePaddleTimer = 0.0f;
+			player->scale = originalPlayerScale;
+			offset = originalPlayerScale.x;
+		}
+	}
+
+	if (slowBallTimer > 0.0f)
+	{
+		slowBallTimer -= dt;
+		if (slowBallTimer <= 0.0f)
+		{
+			slowBallTimer = 0.0f;
+			ball->velocity = originalBallVelocity;
+		}
+	}
+
+	if (fastBallTimer > 0.0f)
+	{
+		fastBallTimer -= dt;
+		if (fastBallTimer <= 0.0f)
+		{
+			fastBallTimer = 0.0f;
+			ball->velocity = originalBallVelocity;
+		}
+	}
+}
+
+void Game::ApplyPowerUp(PowerUpType type)
+{
+	switch (type)
+	{
+	case PowerUpType::WidePaddle:
+		player->scale.x = 2.5f;
+		offset = 2.5f;
+		widePaddleTimer = 8.0f;
+		break;
+	case PowerUpType::ExtraLife:
+		if (player->lives < 5)
+			player->lives++;
+		break;
+	case PowerUpType::SlowBall:
+		originalBallVelocity = ball->velocity;
+		ball->velocity *= 0.6f;
+		slowBallTimer = 6.0f;
+		fastBallTimer = 0.0f;
+		break;
+	case PowerUpType::FastBall:
+		originalBallVelocity = ball->velocity;
+		ball->velocity *= 1.5f;
+		fastBallTimer = 6.0f;
+		slowBallTimer = 0.0f;
+		break;
+	}
+}
+
+bool Game::CollisionDetection(std::unique_ptr<PowerUp>& powerUp, std::unique_ptr<Player>& player)
+{
+	float puLeft = powerUp->position.x - powerUp->scale.x;
+	float puRight = powerUp->position.x + powerUp->scale.x;
+	float puTop = powerUp->position.y - powerUp->scale.y;
+	float puBottom = powerUp->position.y + powerUp->scale.y;
+
+	float playerLeft = player->position.x - player->scale.x;
+	float playerRight = player->position.x + player->scale.x;
+	float playerTop = player->position.y - player->scale.y;
+	float playerBottom = player->position.y + player->scale.y;
+
+	if (puBottom <= playerTop) return false;
+	if (puTop >= playerBottom) return false;
+	if (puRight <= playerLeft) return false;
+	if (puLeft >= playerRight) return false;
+
+	return true;
 }
 
 void Game::RenderSprite(std::unique_ptr<Shader>& shader, glm::mat4 translation, glm::mat4 scale, glm::vec3 colour, Texture& texture)

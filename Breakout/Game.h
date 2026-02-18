@@ -11,6 +11,7 @@
 #include "models/Brick.h"
 #include "models/Model.h"
 #include "models/Player.h"
+#include "models/PowerUp.h"
 #include "models/Sprite.h"
 #include "models/GameObject.h"
 
@@ -39,6 +40,11 @@ private:
 	
 	bool CollisionDetection(std::unique_ptr<Ball>& ball, std::unique_ptr<Brick>& brick);
 	bool CollisionDetection(std::unique_ptr<Ball>& ball, std::unique_ptr<Player>& player);
+	bool CollisionDetection(std::unique_ptr<PowerUp>& powerUp, std::unique_ptr<Player>& player);
+
+	void SpawnPowerUp(glm::vec3 brickPosition);
+	void UpdatePowerUps(float dt);
+	void ApplyPowerUp(PowerUpType type);
 
 	void SetCrackedBrick(int x, int y);
 	void SetDeadBrick(int x, int y);
@@ -84,6 +90,16 @@ private:
 	int comboCount = 0;
 	float comboTimer = 0.0f;
 	static constexpr float COMBO_TIMEOUT = 2.0f;
+
+	std::vector<std::unique_ptr<PowerUp>> activePowerUps;
+
+	float widePaddleTimer = 0.0f;
+	float slowBallTimer = 0.0f;
+	float fastBallTimer = 0.0f;
+	glm::vec3 originalPlayerScale;
+	glm::vec2 originalBallVelocity;
+
+	static constexpr float POWERUP_SPAWN_CHANCE = 0.25f;
 
 	glm::vec3 _lightPos = glm::vec3(30.0f, 30.0f, 30.0f);
 	const glm::vec3 _lightColour = glm::vec3(0.8f, 0.9f, 0.8f);
