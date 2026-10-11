@@ -21,11 +21,19 @@ A 3D breakout game made with OpenGL and GLFW. This project is initialized for le
 | ESC | Exit game |
 
 ## Used technologies
-- Visual Studio 2022 / CMake 3.28.0-rc1
-- Assimp
-- Glad
-- Glfw/Glm
-- stb image
+- OpenGL 3.3, GLFW, glm, Assimp, glad, stb_image
+- CMake
+
+## Building
+
+```
+cmake -B build
+cmake --build build --config Release
+```
+
+The game ends up in `Bin/` with the `res` folder next to it. Run it from there.
+
+If GLFW, glm or Assimp are installed on your system they get used, otherwise CMake downloads and builds them, so the first build takes a couple of minutes. On Windows you can also open the folder in Visual Studio, it picks up the CMake project.
 
 ## In Game Screenshots
 ![Brokeout1](https://github.com/user-attachments/assets/69e4423f-c48c-4dd9-b475-76f02aa09211)

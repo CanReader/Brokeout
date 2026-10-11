@@ -17,3 +17,6 @@ CMakeFiles/
 *.dll
 *.so
 *.dylib
+
+# CMake output
+cmake_install.cmake
